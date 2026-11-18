@@ -10,8 +10,6 @@ Tóm tắt: Thiết kế hệ thống có dự phòng đầy đủ, định tuy�
 
 ## Topology tổng quan
 
-![image.png](image.png)
-
 ```mermaid
 graph LR
   subgraph B1["  BUILDING 1  "]
