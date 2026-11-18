@@ -3,7 +3,9 @@
 # Enterprise Network Lab — Cisco Packet Tracer
 
 Mục tiêu: Xây dựng hệ thống mạng dành cho doanh nghiệp với 2 tòa nhà giả định
+
 Công nghệ sử dụng: DHCP,OSPF,Routing Inter-VLAN,HSRP, NTP.
+
 Tóm tắt: Thiết kế hệ thống có dự phòng đầy đủ, định tuyến động liên tòa nhà, cấp IP tự động không mất phiên khi failover.
 
 ---
