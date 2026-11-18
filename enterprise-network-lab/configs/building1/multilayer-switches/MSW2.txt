@@ -1,0 +1,116 @@
+! ============================================================
+! MSW2 — Building 1 Multilayer Switch (STANDBY)
+! Role    : Distribution layer, HSRP Standby
+! Uplinks : Gi0/1 → R1 (routed), Gi0/2 → MSW1 (trunk)
+!           Fa0/1 → SW1, Fa0/2 → SW2, Fa0/3 → SW3
+! HSRP    : Standby for VLAN 10/20/30 (priority 100 default)
+! ============================================================
+
+hostname MSW2
+
+ip routing
+
+spanning-tree mode pvst
+
+interface FastEthernet0/1
+ description Trunk-to-SW1
+ switchport trunk allowed vlan 10,20,30
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+
+interface FastEthernet0/2
+ description Trunk-to-SW2
+ switchport trunk allowed vlan 10,20,30
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+
+interface FastEthernet0/3
+ description Trunk-to-SW3
+ switchport trunk allowed vlan 10,20,30
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+
+interface GigabitEthernet0/2
+ description Trunk-to-MSW1
+ switchport trunk allowed vlan 10,20,30
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+
+interface GigabitEthernet0/1
+ description Routed-to-R1-Gi0/0
+ no switchport
+ ip address 10.10.1.6 255.255.255.252
+ no shutdown
+
+! --- SVI VLAN 10 — HR ---
+interface Vlan10
+ description Gateway-VLAN10-HR
+ mac-address 0090.2b6e.2c01
+ ip address 192.168.10.3 255.255.255.0
+ standby 10 ip 192.168.10.1
+ standby 10 preempt
+ no shutdown
+
+! --- SVI VLAN 20 — Sales ---
+interface Vlan20
+ description Gateway-VLAN20-Sales
+ mac-address 0090.2b6e.2c02
+ ip address 192.168.20.3 255.255.255.0
+ standby 20 ip 192.168.20.1
+ standby 20 preempt
+ no shutdown
+
+! --- SVI VLAN 30 — Finance ---
+interface Vlan30
+ description Gateway-VLAN30-Finance
+ mac-address 0090.2b6e.2c03
+ ip address 192.168.30.3 255.255.255.0
+ standby 30 ip 192.168.30.1
+ standby 30 preempt
+ no shutdown
+
+interface Vlan1
+ no ip address
+ shutdown
+
+! --- OSPF ---
+router ospf 1
+ log-adjacency-changes
+ passive-interface Vlan10
+ passive-interface Vlan20
+ passive-interface Vlan30
+ network 10.10.1.4 0.0.0.3 area 0
+ network 192.168.10.0 0.0.0.255 area 0
+ network 192.168.20.0 0.0.0.255 area 0
+ network 192.168.30.0 0.0.0.255 area 0
+
+! --- DHCP — Standby pool: .128 to .254 per VLAN ---
+! Activated only if MSW1 fails (split-pool redundancy)
+ip dhcp excluded-address 192.168.10.1 192.168.10.127
+ip dhcp excluded-address 192.168.20.1 192.168.20.127
+ip dhcp excluded-address 192.168.30.1 192.168.30.127
+
+ip dhcp pool VLAN10
+ network 192.168.10.0 255.255.255.0
+ default-router 192.168.10.1
+ dns-server 8.8.8.8
+ lease 1
+
+ip dhcp pool VLAN20
+ network 192.168.20.0 255.255.255.0
+ default-router 192.168.20.1
+ dns-server 8.8.8.8
+ lease 1
+
+ip dhcp pool VLAN30
+ network 192.168.30.0 255.255.255.0
+ default-router 192.168.30.1
+ dns-server 8.8.8.8
+ lease 1
+
+! --- NTP ---
+ntp server 10.10.1.1
+
+line con 0
+line vty 0 4
+ login

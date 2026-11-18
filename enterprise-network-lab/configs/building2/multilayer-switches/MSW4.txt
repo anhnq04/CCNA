@@ -1,0 +1,111 @@
+! ============================================================
+! MSW4 — Building 2 Multilayer Switch (STANDBY)
+! Role    : Distribution layer, HSRP Standby
+! HSRP    : Standby for VLAN 40/50/60 (priority 200)
+! ============================================================
+
+hostname MSW4
+
+ip routing
+
+spanning-tree mode pvst
+
+interface FastEthernet0/1
+ description Trunk-to-SW4
+ switchport trunk allowed vlan 40,50,60
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+
+interface FastEthernet0/2
+ description Trunk-to-SW5
+ switchport trunk allowed vlan 40,50,60
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+
+interface FastEthernet0/3
+ description Trunk-to-SW6
+ switchport trunk allowed vlan 40,50,60
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+
+interface GigabitEthernet0/2
+ description Trunk-to-MSW3
+ switchport trunk allowed vlan 40,50,60
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+
+interface GigabitEthernet0/1
+ description Routed-to-R2-Gi0/0
+ no switchport
+ ip address 10.10.2.6 255.255.255.252
+ no shutdown
+
+interface Vlan40
+ description Gateway-VLAN40-HR
+ mac-address 0002.17d8.5701
+ ip address 192.168.40.3 255.255.255.0
+ standby 40 ip 192.168.40.1
+ standby 40 priority 200
+ standby 40 preempt
+ no shutdown
+
+interface Vlan50
+ description Gateway-VLAN50-Sales
+ mac-address 0002.17d8.5702
+ ip address 192.168.50.3 255.255.255.0
+ standby 50 ip 192.168.50.1
+ standby 50 priority 200
+ standby 50 preempt
+ no shutdown
+
+interface Vlan60
+ description Gateway-VLAN60-Finance
+ mac-address 0002.17d8.5703
+ ip address 192.168.60.3 255.255.255.0
+ standby 60 ip 192.168.60.1
+ standby 60 priority 200
+ standby 60 preempt
+ no shutdown
+
+interface Vlan1
+ no ip address
+ shutdown
+
+router ospf 1
+ log-adjacency-changes
+ passive-interface Vlan40
+ passive-interface Vlan50
+ passive-interface Vlan60
+ network 10.10.2.4 0.0.0.3 area 0
+ network 192.168.40.0 0.0.0.255 area 0
+ network 192.168.50.0 0.0.0.255 area 0
+ network 192.168.60.0 0.0.0.255 area 0
+
+! --- DHCP — Standby pool: .128 to .254 per VLAN ---
+ip dhcp excluded-address 192.168.40.1 192.168.40.127
+ip dhcp excluded-address 192.168.50.1 192.168.50.127
+ip dhcp excluded-address 192.168.60.1 192.168.60.127
+
+ip dhcp pool VLAN40
+ network 192.168.40.0 255.255.255.0
+ default-router 192.168.40.1
+ dns-server 8.8.8.8
+ lease 1
+
+ip dhcp pool VLAN50
+ network 192.168.50.0 255.255.255.0
+ default-router 192.168.50.1
+ dns-server 8.8.8.8
+ lease 1
+
+ip dhcp pool VLAN60
+ network 192.168.60.0 255.255.255.0
+ default-router 192.168.60.1
+ dns-server 8.8.8.8
+ lease 1
+
+ntp server 10.10.1.1
+
+line con 0
+line vty 0 4
+ login

@@ -1,0 +1,47 @@
+! ============================================================
+! R1 — Building 1 WAN Router
+! Model   : Cisco 2901 (with HWIC-2T for serial)
+! Role    : WAN gateway, NTP master, OSPF speaker
+! Links   : Gi0/1 → MSW1, Gi0/0 → MSW2, Se0/0/0 → R2 (DCE)
+! ============================================================
+
+hostname R1
+
+! --- Interfaces ---
+interface GigabitEthernet0/1
+ description Routed-to-MSW1-Gi0/1
+ ip address 10.10.1.1 255.255.255.252
+ no shutdown
+
+interface GigabitEthernet0/0
+ description Routed-to-MSW2-Gi0/1
+ ip address 10.10.1.5 255.255.255.252
+ no shutdown
+
+interface Serial0/0/0
+ description WAN-to-R2 (DCE end)
+ ip address 10.10.10.1 255.255.255.252
+ clock rate 64000
+ no shutdown
+
+interface Serial0/0/1
+ no ip address
+ shutdown
+
+interface Vlan1
+ no ip address
+ shutdown
+
+! --- OSPF ---
+router ospf 1
+ log-adjacency-changes
+ network 10.10.1.0 0.0.0.3 area 0
+ network 10.10.1.4 0.0.0.3 area 0
+ network 10.10.10.0 0.0.0.3 area 0
+
+! --- NTP Master (stratum 1) ---
+ntp master 1
+
+line con 0
+line vty 0 4
+ login

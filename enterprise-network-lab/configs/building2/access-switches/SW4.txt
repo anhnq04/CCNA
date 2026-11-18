@@ -1,0 +1,33 @@
+! ============================================================
+! SW4 — Building 2 Access Switch
+! Role    : Access layer, VLAN 40 (HR Department)
+! Uplinks : Fa0/1 → MSW3, Fa0/2 → MSW4
+! ============================================================
+
+hostname SW4
+
+spanning-tree mode pvst
+spanning-tree extend system-id
+
+interface FastEthernet0/1
+ description Trunk-to-MSW3
+ switchport trunk allowed vlan 40,50,60
+ switchport mode trunk
+
+interface FastEthernet0/2
+ description Trunk-to-MSW4
+ switchport trunk allowed vlan 40,50,60
+ switchport mode trunk
+
+interface range FastEthernet0/3-24
+ description Access-VLAN40-HR
+ switchport access vlan 40
+ switchport mode access
+
+interface Vlan1
+ no ip address
+ shutdown
+
+line con 0
+line vty 0 15
+ login

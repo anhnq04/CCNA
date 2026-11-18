@@ -1,0 +1,36 @@
+! ============================================================
+! SW1 — Building 1 Access Switch
+! Role    : Access layer, VLAN 10 (HR Department)
+! Uplinks : Fa0/1 → MSW1, Fa0/2 → MSW2
+! ============================================================
+
+hostname SW1
+
+spanning-tree mode pvst
+spanning-tree extend system-id
+
+! --- Uplink trunk ports to multilayer switches ---
+interface FastEthernet0/1
+ description Trunk-to-MSW1
+ switchport trunk allowed vlan 10,20,30
+ switchport mode trunk
+
+interface FastEthernet0/2
+ description Trunk-to-MSW2
+ switchport trunk allowed vlan 10,20,30
+ switchport mode trunk
+
+! --- Access ports for HR end devices ---
+interface range FastEthernet0/3-24
+ description Access-VLAN10-HR
+ switchport access vlan 10
+ switchport mode access
+
+! --- Management VLAN (disabled) ---
+interface Vlan1
+ no ip address
+ shutdown
+
+line con 0
+line vty 0 15
+ login

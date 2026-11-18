@@ -1,0 +1,116 @@
+! ============================================================
+! MSW3 — Building 2 Multilayer Switch (PRIMARY / ACTIVE)
+! Role    : Distribution layer, Inter-VLAN routing, HSRP Active
+! Uplinks : Gi0/1 → R2 (routed), Gi0/2 → MSW4 (trunk)
+!           Fa0/1 → SW4, Fa0/2 → SW5, Fa0/3 → SW6
+! HSRP    : Active for VLAN 40/50/60 (priority 210)
+! ============================================================
+
+hostname MSW3
+
+ip routing
+
+spanning-tree mode pvst
+
+interface FastEthernet0/1
+ description Trunk-to-SW4
+ switchport trunk allowed vlan 40,50,60
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+
+interface FastEthernet0/2
+ description Trunk-to-SW5
+ switchport trunk allowed vlan 40,50,60
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+
+interface FastEthernet0/3
+ description Trunk-to-SW6
+ switchport trunk allowed vlan 40,50,60
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+
+interface GigabitEthernet0/2
+ description Trunk-to-MSW4
+ switchport trunk allowed vlan 40,50,60
+ switchport trunk encapsulation dot1q
+ switchport mode trunk
+
+interface GigabitEthernet0/1
+ description Routed-to-R2-Gi0/1
+ no switchport
+ ip address 10.10.2.2 255.255.255.252
+ no shutdown
+
+interface Vlan40
+ description Gateway-VLAN40-HR
+ mac-address 00d0.ba3d.0201
+ ip address 192.168.40.2 255.255.255.0
+ standby 40 ip 192.168.40.1
+ standby 40 priority 210
+ standby 40 preempt
+ no shutdown
+
+interface Vlan50
+ description Gateway-VLAN50-Sales
+ mac-address 00d0.ba3d.0202
+ ip address 192.168.50.2 255.255.255.0
+ standby 50 ip 192.168.50.1
+ standby 50 priority 210
+ standby 50 preempt
+ no shutdown
+
+interface Vlan60
+ description Gateway-VLAN60-Finance
+ mac-address 00d0.ba3d.0203
+ ip address 192.168.60.2 255.255.255.0
+ standby 60 ip 192.168.60.1
+ standby 60 priority 210
+ standby 60 preempt
+ no shutdown
+
+interface Vlan1
+ no ip address
+ shutdown
+
+router ospf 1
+ log-adjacency-changes
+ passive-interface Vlan40
+ passive-interface Vlan50
+ passive-interface Vlan60
+ network 10.10.2.0 0.0.0.3 area 0
+ network 192.168.40.0 0.0.0.255 area 0
+ network 192.168.50.0 0.0.0.255 area 0
+ network 192.168.60.0 0.0.0.255 area 0
+
+! --- DHCP — Primary pool: .11 to .127 per VLAN ---
+ip dhcp excluded-address 192.168.40.1 192.168.40.10
+ip dhcp excluded-address 192.168.40.128 192.168.40.254
+ip dhcp excluded-address 192.168.50.1 192.168.50.10
+ip dhcp excluded-address 192.168.50.128 192.168.50.254
+ip dhcp excluded-address 192.168.60.1 192.168.60.10
+ip dhcp excluded-address 192.168.60.128 192.168.60.254
+
+ip dhcp pool VLAN40
+ network 192.168.40.0 255.255.255.0
+ default-router 192.168.40.1
+ dns-server 8.8.8.8
+ lease 1
+
+ip dhcp pool VLAN50
+ network 192.168.50.0 255.255.255.0
+ default-router 192.168.50.1
+ dns-server 8.8.8.8
+ lease 1
+
+ip dhcp pool VLAN60
+ network 192.168.60.0 255.255.255.0
+ default-router 192.168.60.1
+ dns-server 8.8.8.8
+ lease 1
+
+ntp server 10.10.1.1
+
+line con 0
+line vty 0 4
+ login
